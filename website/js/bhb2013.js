@@ -5,6 +5,16 @@ var map;
 var marker;
 var markers = [];
 
+// battlehack
+var nickname;
+var password;
+var demoname;
+var hashtag;
+var demolat;
+var demolng;
+var start;
+var end;
+
 var locpos = new google.maps.LatLng(12.458033,17.226563);
 
 var origin;
@@ -50,11 +60,25 @@ var styles = [
     };
  
  
+function init(){
+$('#createdemo').hide();
+} 
+ 
 function initmaps(){
+//$('#createdemo').hide();
+//$('#map').hide();
 //directionsDisplay = new google.maps.DirectionsRenderer();
 map = new google.maps.Map(document.getElementById("map"), myOptionss);
 //directionsDisplay.setMap(map);
 //getUserInfo();
+			google.maps.event.addListener(map, 'click', function(event) {
+				origin = event.latLng;
+				addMarker(origin);
+				//var myLatLng = event.latLng;
+				demolat = origin.lat();
+				demolng = origin.lng();
+			});
+  
 }
 
 var k = 0;
@@ -96,9 +120,16 @@ $('#tablebody').append('<tr><td>' + shortname +'</td><td>' + timestamp + '</td><
 
 }
 
-function addToDB(uuid, shortname, messwert, timestamp, latitude, longitude){
+function AddToDb(){
+nickname = $('#nickname').val();
+password = $('#password').val();
+demoname = $('#demoname').val();
+hashtag = $('#hashtag').val();
+console.log(nickname, password, demoname, hashtag, demolat, demolng);
 
-$.post("addToElbe.php", {uuid:uuid, shortname:shortname, messwert:messwert, timestamp:timestamp, latitude:latitude, longitude:longitude}, function(data)
+//alert('yoyo');
+
+$.post("addToDB.php", {nickname:nickname, password:password, demoname:demoname, hashtag:hashtag, demolat:demolat, demolng:demolng, start:start, end:end}, function(data)
 {
 $("#results").html(data);
 });
@@ -106,16 +137,32 @@ $("#results").html(data);
 
 }
 
- function addMarker(loc, image, messwert) {
+function createDemo(){
+//alert('foo');
+$('#mainimg').hide('slow');
+$('#demosubmitbtn').hide();
+$('#createdemo').show();
+$('#map').show();
+initmaps();
+}
+
+ function addMarker(origin) {
 
       marker = new google.maps.Marker({
-          position: loc,
+          position: origin,
           map: map,
       });
+	  
+	  $('#demosubmitbtn').show('slow');
+	  
+	  $("#demosubmitbtn").submit(function() {	
+											//console.log();
+											
+											return true;} );
 	
-		google.maps.event.addListener(marker, 'click', function() {
-		alert(image + " " + messwert)
-		});
+		//google.maps.event.addListener(marker, 'click', function() {
+		//alert(image + " " + messwert)
+		//});
 			
         //markerssc.push(marker);
  }
