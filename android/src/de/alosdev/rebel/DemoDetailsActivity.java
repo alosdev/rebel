@@ -16,9 +16,12 @@
 
 package de.alosdev.rebel;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,6 +35,8 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 
+import de.alosdev.rebel.domain.DemoDetails;
+
 /**
  * This demo shows how GMS Location can be used to check for changes to the users location.  The
  * "My Location" button uses GMS Location to set the blue dot representing the users location. To
@@ -40,6 +45,15 @@ import com.google.android.gms.maps.SupportMapFragment;
  */
 public class DemoDetailsActivity extends FragmentActivity
     implements ConnectionCallbacks, OnConnectionFailedListener, LocationListener {
+	
+	private static final String TAG = DemoDetailsActivity.class.getSimpleName();
+	private static final String BUNDLE_DETAIL = TAG + ".demoDetails";
+	
+	public static void start(Activity activity, DemoDetails details) {
+		Intent startIntent = new Intent(activity, DemoDetailsActivity.class);
+		startIntent.putExtra(BUNDLE_DETAIL, details);
+		activity.startActivity(startIntent);
+	}
 
   private GoogleMap mMap;
 
@@ -52,12 +66,23 @@ public class DemoDetailsActivity extends FragmentActivity
       .setInterval(5000)         // 5 seconds
       .setFastestInterval(16)    // 16ms = 60fps
       .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+	private DemoDetails details;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_demo_details);
     mMessageView = (TextView) findViewById(R.id.message_text);
+    details = getIntent().getParcelableExtra(BUNDLE_DETAIL);
+    getActionBar().setTitle(details.title);
+    getActionBar().setDisplayHomeAsUpEnabled(true);
+  }
+  
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+  	if (item.getItemId() == android.R.id.home)
+  		onBackPressed();
+    return super.onOptionsItemSelected(item);
   }
 
   @Override
