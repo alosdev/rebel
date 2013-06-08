@@ -1,11 +1,18 @@
 package de.alosdev.rebel;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 
 import android.content.Context;
+import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.util.JsonReader;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,7 +28,7 @@ import de.alosdev.rebel.view.DemoView;
 public class StartActivity extends FragmentActivity implements OnItemClickListener {
 
 	private static final String TAG = StartActivity.class.getSimpleName();
-	private static final DemoDetails LOADING_DETAILS = new DemoDetails(-1, "Loading", null, null);
+	private static final DemoDetails LOADING_DETAILS = new DemoDetails(-1, "Loading", null, null, null);
 	private static final String BUNDLE_DEMODETAILS = TAG + ".demos";
 
 	private CustomArrayAdapter adapter;
@@ -126,16 +133,31 @@ public class StartActivity extends FragmentActivity implements OnItemClickListen
 
 		@Override
 		protected ArrayList<DemoDetails> doInBackground(Integer... params) {
-			// TODO Api Anbindung
+			JsonReader reader = null;
 			try {
-				Thread.sleep(5000);
-			} catch (InterruptedException e) {
-				Log.e(TAG, "error during sleep", e);
+				HttpURLConnection conn = (HttpURLConnection) new URL("http://rebel.polizei-news.com/test.php")
+				    .openConnection();
+				conn.setReadTimeout(10000 /* milliseconds */);
+				conn.setConnectTimeout(15000 /* milliseconds */);
+				conn.setRequestMethod("GET");
+				conn.setDoInput(true);
+				// Starts the query
+				conn.connect();
+				reader = new JsonReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+				return readDemoDetailsArray(reader);
+			} catch (MalformedURLException e) {
+				Log.e(TAG, "cannot parse document", e);
+			} catch (IOException e) {
+				Log.e(TAG, "cannot parse document", e);
+			} finally {
+				if (null != reader)
+					try {
+						reader.close();
+					} catch (IOException e) {
+					}
 			}
-			ArrayList<DemoDetails> list = new ArrayList<DemoDetails>();
-			list.add(new DemoDetails(1, "Demo 1", "description 1", null));
-			list.add(new DemoDetails(2, "demo 2", "description 2", null));
-			return list;
+
+			return new ArrayList<DemoDetails>();
 		}
 
 		@Override
@@ -145,5 +167,70 @@ public class StartActivity extends FragmentActivity implements OnItemClickListen
 			loading = false;
 			invalidateOptionsMenu();
 		}
+	}
+
+	public ArrayList<DemoDetails> readDemoDetailsArray(JsonReader reader) throws IOException {
+		ArrayList<DemoDetails> messages = new ArrayList<DemoDetails>();
+
+		reader.beginArray();
+		while (reader.hasNext()) {
+			messages.add(readDemoDetail(reader));
+		}
+		reader.endArray();
+		return messages;
+	}
+
+	private DemoDetails readDemoDetail(JsonReader reader) throws IOException {
+		reader.beginObject();
+		int id = -1;
+		String title = null;
+		String desc = null;
+		String hashTag = null;
+		ArrayList<Location> route = new ArrayList<Location>();
+		while (reader.hasNext()) {
+			String name = reader.nextName();
+			if (name.equals("id")) {
+				id = reader.nextInt();
+			} else if (name.equals("title")) {
+				title = reader.nextString();
+			} else if (name.equals("desc")) {
+				desc = reader.nextString();
+			} else if (name.equals("hashtag")) {
+				hashTag = reader.nextString();
+			} else if (name.equals("route")) {
+				reader.beginArray();
+				while (reader.hasNext()) {
+					route.add(readLocation(reader));
+				}
+				reader.endArray();
+			} else {
+				reader.skipValue();
+			}
+		}
+		reader.endObject();
+		return new DemoDetails(id, title, desc, hashTag, route);
+	}
+
+	private Location readLocation(JsonReader reader) throws IOException {
+		reader.beginObject();
+		double latitude = .0, longitude = .0;
+		String label = null;
+		while (reader.hasNext()) {
+			String name = reader.nextName();
+			if (name.equals("latitude")) {
+				latitude = reader.nextDouble();
+			} else if (name.equals("longitude")) {
+				longitude = reader.nextDouble();
+			} else if (name.equals("label")) {
+				label = reader.nextString();
+			} else {
+				reader.skipValue();
+			}
+		}
+		reader.endObject();
+		Location loc = new Location(label);
+		loc.setLatitude(latitude);
+		loc.setLongitude(longitude);
+		return loc;
 	}
 }

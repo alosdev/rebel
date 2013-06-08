@@ -12,10 +12,15 @@ public class DemoDetails implements Parcelable {
 	public final String title;
 	public final String description;
 	public final ArrayList<Location> route;
+	public final String hashTag;
 
-	public DemoDetails(int demoId, String title, String description, ArrayList<Location> route) {
+	public DemoDetails(int demoId, String title, String description, String hashTag, ArrayList<Location> route) {
 		this.demoId = demoId;
 		this.title = title;
+		if (null == hashTag)
+			this.hashTag = "";
+		else
+			this.hashTag = hashTag;
 		if (route == null)
 			this.route = new ArrayList<Location>();
 		else
@@ -43,6 +48,7 @@ public class DemoDetails implements Parcelable {
 		dest.writeInt(demoId);
 		dest.writeString(title);
 		dest.writeString(description);
+		dest.writeString(hashTag);
 		dest.writeList(route);
 	}
 
@@ -51,6 +57,7 @@ public class DemoDetails implements Parcelable {
 		demoId = in.readInt();
 		title = in.readString();
 		description = in.readString();
+		hashTag = in .readString();
 		route = in.readArrayList(null);
 	}
 
