@@ -38,7 +38,7 @@ import com.google.android.gms.maps.SupportMapFragment;
  * track changes to the users location on the map, we request updates from the
  * {@link LocationClient}.
  */
-public class MyLocationDemoActivity extends FragmentActivity
+public class DemoDetailsActivity extends FragmentActivity
     implements ConnectionCallbacks, OnConnectionFailedListener, LocationListener {
 
   private GoogleMap mMap;
@@ -56,7 +56,7 @@ public class MyLocationDemoActivity extends FragmentActivity
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    setContentView(R.layout.my_location_demo);
+    setContentView(R.layout.activity_demo_details);
     mMessageView = (TextView) findViewById(R.id.message_text);
   }
 

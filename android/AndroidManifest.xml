@@ -51,7 +51,7 @@
       </intent-filter>
     </activity>
     <activity
-      android:name="MyLocationDemoActivity"
+      android:name="DemoDetailsActivity"
       android:label="Map" />
   </application>
 
