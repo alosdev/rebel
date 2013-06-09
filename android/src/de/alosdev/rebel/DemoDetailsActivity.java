@@ -307,6 +307,8 @@ public class DemoDetailsActivity extends FragmentActivity implements ConnectionC
 
 						conn.setDoOutput(true);
 						conn.setRequestMethod("POST");
+						conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+
 						conn.setChunkedStreamingMode(0);
 						conn.setUseCaches(false);
 
