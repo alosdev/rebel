@@ -19,15 +19,14 @@
   android:layout_width="match_parent"
   android:layout_height="match_parent" >
 
-  <TextView
-    android:id="@+id/message_text"
+  <ListView
+    android:id="@+id/list"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_alignParentBottom="true"
     android:layout_below="@+id/map" />
-
+  
   <fragment
-    xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/map"
     android:layout_width="match_parent"
     android:layout_height="300dp"
