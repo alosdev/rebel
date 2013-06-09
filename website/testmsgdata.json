@@ -1,0 +1,20 @@
+ 
+	[	{
+		"user":"hasan",
+		"location":
+			{
+			"latitude":"45.8288",
+			"longitude":"2.63672"
+			},
+		"report":"this is a test"
+		},
+		{
+		"user":"erik",
+		"location":
+			{
+			"latitude":"45.8288",
+			"longitude":"2.63672"
+			},
+		"report":"this is a test 2"
+		}
+	]

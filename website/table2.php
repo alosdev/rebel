@@ -7,6 +7,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Create a demonstration - share and keep informed about it.">
     <meta name="author" content="">
+	<script src="js/jquery.js"></script>
+	<script src="js/jquery.dataTables.js"></script>
+	<script src="js/bhb2013-2.js"></script>
+	
+	<script type="text/javascript" charset="utf-8">
+			$(document).ready(function() {
+				$('#example').dataTable();
+			} );
+		</script>
 	
 	<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>	
 	
@@ -62,7 +71,7 @@
     <link rel="shortcut icon" href="img/favicon.png">
 	</head>
 
-  <body onload="init()">
+  <body>
 
     <div class="container-narrow">
 	
@@ -73,42 +82,54 @@
 
       <div class="jumbotron">
 	  
-		<a class="btn btn-large btn-success" onclick="createDemo()">Create Demo</a>  
+		<a class="btn btn-large btn-success" href="index.html">Create Demo</a>  
 		<a class="btn btn-large btn-success" href="table.php">Show Demos</a>  
 		<!--<a class="btn btn-large btn-success" href="index.html">Donate</a>-->
 		
 		<br/><br/>
 		
-		<form id="createdemo" action="javascript:AddToDb();">
-		<fieldset>
-		<input id="nickname" type="text" placeholder="Nickname"><br/>
-		<input id="password" type="text" placeholder="Password"><br/>
-		<input id="demoname" type="text" placeholder="Demostration"><br/>
-		<input id="description" type="text" placeholder="Description"><br/>
-		<input id="place" type="text" placeholder="Place / near by"><br/>
-		<input id="hashtag" type="text" placeholder="Twitter-Hashtag"><br/>
-		<button type="submit" class="btn" id="demosubmitbtn">Submit</button>
-		</fieldset>
-		</form>
+		<table cellpadding="0" cellspacing="0" border="0" class="display" id="example" width="100%">
+		<thead>
+		<tr>
+			<th>Demonstration</th>
+			<th>Hashtag</th>
+			<th>Balance</th>
+		</tr>
+		</thead>
+		<tbody>
 		
-		<img id="mainimg" src="img/fist.jpg" />
-		
-		<div id="map"></div>
-		<div id="results"></div>
-<!--
-<div id="donatebtn">
-		<h4>Donate for this demo</h4>
-		<script src="js/paypal-button.min.js?merchant=donate@polizei-news.com"
-		    data-button="donate"
-		    data-name="My donation"
-		    data-amount-editable="5.00"		
-		    data-locale="en_US"
-			data-callback="http://rebel.polizei-news.com/transactions"
-			data-env="sandbox"
-		></script>
-		
-	</div>-->
-		
+		<?php
+//header("Content-Type: text/html; charset=utf-8");
+$con = mysql_connect("localhost","d01760a4","paypal2013");
+if (!$con)
+ {
+ die('Could not connect: ' . mysql_error());
+}
+
+mysql_select_db("d01760a4", $con);
+//mysql_query("set names 'utf8'");
+
+$states=mysql_query("SELECT id, demoname, hashtag, balance FROM  `demos` ");
+
+while($state=mysql_fetch_array($states)) {
+?>
+<tr class='odd gradeX' onclick='showDemoInfo()'>
+<td><?php $state['demoname'] ?></td><td><?php $state['hashtag'] ?></td><td></td>
+</tr>
+
+<?php
+}
+?> 
+</tbody>
+<tfoot>
+		<tr>
+			<th>Demonstration</th>
+			<th>Hashtag</th>
+			<th>Balance</th>
+		</tr>
+	</tfoot>
+</table>
+
 	  </div>
 
       <hr>
@@ -148,7 +169,7 @@
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="js/jquery.js"></script>
+    
     <script src="js/bootstrap-transition.js"></script>
     <script src="js/bootstrap-alert.js"></script>
     <script src="js/bootstrap-modal.js"></script>
@@ -161,6 +182,6 @@
     <script src="js/bootstrap-collapse.js"></script>
     <script src="js/bootstrap-carousel.js"></script>
     <script src="js/bootstrap-typeahead.js"></script>
-	<script src="js/bhb2013.js"></script>
+	
   </body>
 </html>
