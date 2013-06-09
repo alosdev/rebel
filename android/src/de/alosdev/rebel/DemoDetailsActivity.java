@@ -72,10 +72,10 @@ public class DemoDetailsActivity extends FragmentActivity
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_demo_details);
-    mMessageView = (TextView) findViewById(R.id.message_text);
     details = getIntent().getParcelableExtra(BUNDLE_DETAIL);
     getActionBar().setTitle(details.title);
     getActionBar().setDisplayHomeAsUpEnabled(true);
+    mMessageView = (TextView) findViewById(R.id.message_text);
   }
   
   @Override
@@ -91,6 +91,7 @@ public class DemoDetailsActivity extends FragmentActivity
     setUpMapIfNeeded();
     setUpLocationClientIfNeeded();
     mLocationClient.connect();
+    mMap.getUiSettings().setZoomControlsEnabled(false);
   }
 
   @Override
