@@ -325,6 +325,7 @@ public class DemoDetailsActivity extends FragmentActivity implements ConnectionC
 				@Override
 				protected void onPostExecute(String result) {
 					Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
+					refresh();
 				}
 
 			}.execute();
@@ -373,7 +374,9 @@ public class DemoDetailsActivity extends FragmentActivity implements ConnectionC
 
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-		// TODO Auto-generated method stub
+		Report item = adapter.getItem(position);
+		if (item.location != null)
+		mMap.animateCamera(CameraUpdateFactory.newLatLng(new LatLng(item.location.getLatitude(), item.location.getLongitude())));
 
 	}
 
