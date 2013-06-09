@@ -16,11 +16,23 @@
 
 package de.alosdev.rebel;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import android.app.Activity;
+import android.app.FragmentManager;
 import android.content.Intent;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.text.TextUtils;
+import android.util.JsonWriter;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
@@ -40,6 +52,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import de.alosdev.rebel.dialog.ReportDialog;
+import de.alosdev.rebel.dialog.ReportDialog.ReportDialogListener;
 import de.alosdev.rebel.domain.DemoDetails;
 
 /**
@@ -49,7 +63,7 @@ import de.alosdev.rebel.domain.DemoDetails;
  * on the map, we request updates from the {@link LocationClient}.
  */
 public class DemoDetailsActivity extends FragmentActivity implements ConnectionCallbacks, OnConnectionFailedListener,
-    LocationListener {
+    LocationListener, ReportDialogListener {
 
 	private static final String TAG = DemoDetailsActivity.class.getSimpleName();
 	private static final String BUNDLE_DETAIL = TAG + ".demoDetails";
@@ -131,14 +145,13 @@ public class DemoDetailsActivity extends FragmentActivity implements ConnectionC
 		}
 	}
 
-	/**
-	 * Button to get current Location. This demonstrates how to get the current
-	 * Location as required, without needing to register a LocationListener.
-	 */
-	public void showMyLocation(View view) {
-		if (mLocationClient != null && mLocationClient.isConnected()) {
-			String msg = "Location = " + mLocationClient.getLastLocation();
-			Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+	public void createReport(View view) {
+		if (lastLocation == null) {
+			Toast.makeText(getApplicationContext(), "No location available", Toast.LENGTH_SHORT).show();
+		} else {
+			FragmentManager fm = getFragmentManager();
+			ReportDialog dialog = new ReportDialog();
+			dialog.show(fm, "fragment_report");
 		}
 	}
 
@@ -166,7 +179,7 @@ public class DemoDetailsActivity extends FragmentActivity implements ConnectionC
 		for (Location loc : details.route)
 			boundsBuilder.include(new LatLng(loc.getLatitude(), loc.getLongitude()));
 
-		mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 130));		
+		mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 130));
 	}
 
 	/**
@@ -193,5 +206,61 @@ public class DemoDetailsActivity extends FragmentActivity implements ConnectionC
 	@Override
 	public void onConnectionFailed(ConnectionResult result) {
 		// Do nothing
+	}
+
+	@Override
+	public void onFinishReportDialog(final String name, final String message) {
+		if (TextUtils.isEmpty(message))
+			Toast.makeText(getApplicationContext(), "you must set a message!", Toast.LENGTH_SHORT).show();
+		else {
+
+			new AsyncTask<Void, Void, String>() {
+				@Override
+				protected String doInBackground(Void... params) {
+					try {
+						URL url = new URL("http://rebel.polizei-news.com/json.php");
+						HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+						conn.setDoOutput(true);
+						conn.setRequestMethod("POST");
+						conn.setChunkedStreamingMode(0);
+						conn.setUseCaches(false);
+
+						OutputStream out = conn.getOutputStream();
+						writeBody(out, name, message);
+						out.close();
+
+						return  "reported name: " + name + "; message:" + message;
+					} catch (MalformedURLException e) {
+						return "cannot send report";
+					} catch (IOException e) {
+						return "cannot send report";
+					}
+				}
+				
+				@Override
+				protected void onPostExecute(String result) {
+					Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
+				}
+
+			}.execute();
+
+		}
+	}
+
+	private void writeBody(OutputStream out, String name, String message) throws UnsupportedEncodingException,
+	    IOException {
+		JsonWriter writer = new JsonWriter(new OutputStreamWriter(out, "UTF-8"));
+
+		writer.beginObject();
+
+		if (TextUtils.isEmpty(name))
+			writer.name("user").value(message);
+		writer.name("location").beginObject().name("longitude").value(lastLocation.getLongitude()).name("latitude")
+		    .value(lastLocation.getLatitude()).endObject();
+		writer.name("report").value(message);
+
+		writer.endObject();
+		writer.close();
 	}
 }
