@@ -17,6 +17,7 @@
 package de.alosdev.rebel;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
@@ -183,15 +184,16 @@ public class DemoDetailsActivity extends FragmentActivity implements ConnectionC
 	}
 
 	private void drawMarkers() {
-	  mMap.clear();
+		mMap.clear();
 		for (Location loc : details.route)
 			mMap.addMarker(new MarkerOptions().position(new LatLng(loc.getLatitude(), loc.getLongitude())));
 		for (Report rep : getReports()) {
 			if (null != rep.location)
-				mMap.addMarker(new MarkerOptions().position(new LatLng(rep.location.getLatitude(), 
-						rep.location.getLongitude())).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+				mMap.addMarker(new MarkerOptions()
+				    .position(new LatLng(rep.location.getLatitude(), rep.location.getLongitude())).icon(
+				        BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
 		}
-  }
+	}
 
 	@Override
 	public void onPause() {
@@ -389,29 +391,19 @@ public class DemoDetailsActivity extends FragmentActivity implements ConnectionC
 		protected ArrayList<Report> doInBackground(Integer... params) {
 			JsonReader reader = null;
 			try {
-				// TODO
-				// HttpURLConnection conn = (HttpURLConnection) new
-				// URL("http://rebel.polizei-news.com/test.php")
-				// .openConnection();
-				// conn.setReadTimeout(10000 /* milliseconds */);
-				// conn.setConnectTimeout(15000 /* milliseconds */);
-				// conn.setRequestMethod("GET");
-				// conn.setDoInput(true);
-				// // Starts the query
-				// conn.connect();
-				// reader = new JsonReader(new InputStreamReader(conn.getInputStream(),
-				// "UTF-8"));
-				try {
-					Thread.sleep(4000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				HttpURLConnection conn = (HttpURLConnection) new URL("http://rebel.polizei-news.com/testmsgdata.json")
+				    .openConnection();
+				conn.setReadTimeout(10000 /* milliseconds */);
+				conn.setConnectTimeout(15000 /* milliseconds */);
+				conn.setRequestMethod("GET");
+				conn.setDoInput(true);
+				conn.connect();
+				reader = new JsonReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
 				return readDemoDetailsArray(reader);
-				// } catch (MalformedURLException e) {
-				// Log.e(TAG, "cannot parse document", e);
-				// } catch (IOException e) {
-				// Log.e(TAG, "cannot parse document", e);
+			} catch (MalformedURLException e) {
+				Log.e(TAG, "cannot parse document", e);
+			} catch (IOException e) {
+				Log.e(TAG, "cannot parse document", e);
 			} finally {
 				if (null != reader)
 					try {
@@ -420,7 +412,7 @@ public class DemoDetailsActivity extends FragmentActivity implements ConnectionC
 					}
 			}
 
-			// return new ArrayList<Report>();
+			return new ArrayList<Report>();
 		}
 
 		@Override
@@ -436,16 +428,58 @@ public class DemoDetailsActivity extends FragmentActivity implements ConnectionC
 
 	}
 
-	private ArrayList<Report> readDemoDetailsArray(JsonReader reader) {
-		ArrayList<Report> result = new ArrayList<Report>();
-		Location location = new Location("m");
-		location.setLatitude(52d);
-		location.setLongitude(13d);
-		result.add(new Report(null, "my new report", location));
-		location = new Location("m");
-		location.setLatitude(52d);
-		location.setLongitude(12d);
-		result.add(new Report("alosdev", "my newer report", location));
-		return result;
+	private ArrayList<Report> readDemoDetailsArray(JsonReader reader) throws IOException {
+		ArrayList<Report> messages = new ArrayList<Report>();
+
+		reader.beginArray();
+		while (reader.hasNext()) {
+			messages.add(readReport(reader));
+		}
+		reader.endArray();
+		return messages;
+	}
+
+	private Report readReport(JsonReader reader) throws IOException {
+		reader.beginObject();
+		String username = null;
+		String report = null;
+		Location location = null;
+		while (reader.hasNext()) {
+			String name = reader.nextName();
+			if (name.equals("name")) {
+				name = reader.nextString();
+			} else if (name.equals("report")) {
+				report = reader.nextString();
+			} else if (name.equals("location")) {
+				location = readLocation(reader);
+			} else {
+				reader.skipValue();
+			}
+		}
+		reader.endObject();
+		return new Report(username, report, location);
+	}
+
+	private Location readLocation(JsonReader reader) throws IOException {
+		reader.beginObject();
+		double latitude = .0, longitude = .0;
+		String label = null;
+		while (reader.hasNext()) {
+			String name = reader.nextName();
+			if (name.equals("latitude")) {
+				latitude = reader.nextDouble();
+			} else if (name.equals("longitude")) {
+				longitude = reader.nextDouble();
+			} else if (name.equals("label")) {
+				label = reader.nextString();
+			} else {
+				reader.skipValue();
+			}
+		}
+		reader.endObject();
+		Location loc = new Location(label);
+		loc.setLatitude(latitude);
+		loc.setLongitude(longitude);
+		return loc;
 	}
 }
